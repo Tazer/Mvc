@@ -345,6 +345,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                     Debug.Assert(_exceptionContext != null);
                     if (_exceptionContext.Result != null)
                     {
+                        _exceptionContext.ExceptionHandled = true;
                         // This means that exception filters returned a result to 'handle' an error.
                         // We're not interested in seeing the exception details since it was handled.
                         await InvokeResultAsync(_exceptionContext.Result);
