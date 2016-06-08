@@ -351,26 +351,20 @@ namespace Microsoft.AspNetCore.Mvc.ApiExplorer
         private IReadOnlyList<ApiResponseType> GetApiResponseTypes(
             ControllerActionDescriptor action,
             IApiResponseMetadataProvider[] responseMetadataAttributes,
-            Type type)
+            Type runtimeReturnType)
         {
             var results = new List<ApiResponseType>();
 
             // Build list of all possible return types (and status codes) for an action.
             var objectTypes = new Dictionary<int, Type>();
 
-            if (type != null && type != typeof(void))
-            {
-                // This return type can be overriden by any response metadata
-                // attributes later if the user wishes to.
-                objectTypes[StatusCodes.Status200OK] = type;
-            }
-
-            // Get the content type that the action explicitly set to support.
-            // Walk through all 'filter' attributes in order, and allow each one to see or override
-            // the results of the previous ones. This is similar to the execution path for content-negotiation.
             var contentTypes = new MediaTypeCollection();
+
             if (responseMetadataAttributes != null)
             {
+                // Get the content type that the action explicitly set to support.
+                // Walk through all 'filter' attributes in order, and allow each one to see or override
+                // the results of the previous ones. This is similar to the execution path for content-negotiation.
                 foreach (var metadataAttribute in responseMetadataAttributes)
                 {
                     metadataAttribute.SetContentTypes(contentTypes);
@@ -379,6 +373,14 @@ namespace Microsoft.AspNetCore.Mvc.ApiExplorer
                     {
                         objectTypes[metadataAttribute.StatusCode] = metadataAttribute.Type;
                     }
+                }
+            }
+
+            if (objectTypes.Count == 0)
+            {
+                if (runtimeReturnType != null && runtimeReturnType != typeof(void))
+                {
+                    objectTypes[StatusCodes.Status200OK] = runtimeReturnType;
                 }
             }
 
