@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Testing.xunit;
 using Newtonsoft.Json;
 using Xunit;
+using ApiExplorerWebSite;
 
 namespace Microsoft.AspNetCore.Mvc.FunctionalTests
 {
@@ -521,6 +522,64 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
             Assert.Equal(200, responseType.StatusCode);
             var responseFormat = Assert.Single(responseType.ResponseFormats);
             Assert.Equal("application/json", responseFormat.MediaType);
+        }
+
+        [Fact]
+        public async Task Test1()
+        {
+            // Arrange
+            var type1 = typeof(ApiExplorerWebSite.Product).FullName;
+            var type2 = typeof(ModelStateDictionary).FullName;
+            var expectedMediaTypes = new[] { "application/json", "text/json", "application/xml", "text/xml" };
+            // Act
+            var response = await Client.GetAsync(
+                "http://localhost/ApiExplorerResponseTypeWithAttribute/CreateProductWithDefaultResponseContentTypes");
+
+            var body = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<List<ApiExplorerData>>(body);
+
+            // Assert
+            var description = Assert.Single(result);
+            Assert.Equal(2, description.SupportedResponseTypes.Count);
+            Assert.Equal(type1, description.SupportedResponseTypes[0].ResponseType);
+            Assert.Equal(201, description.SupportedResponseTypes[0].StatusCode);
+            Assert.Equal(
+                expectedMediaTypes,
+                description.SupportedResponseTypes[0].ResponseFormats.Select(responseFormat => responseFormat.MediaType).ToArray());
+            Assert.Equal(type2, description.SupportedResponseTypes[1].ResponseType);
+            Assert.Equal(400, description.SupportedResponseTypes[1].StatusCode);
+            Assert.Equal(
+                expectedMediaTypes,
+                description.SupportedResponseTypes[1].ResponseFormats.Select(responseFormat => responseFormat.MediaType).ToArray());
+        }
+
+        [Fact]
+        public async Task Test2()
+        {
+            // Arrange
+            var type1 = typeof(ApiExplorerWebSite.Product).FullName;
+            var type2 = typeof(ModelStateDictionary).FullName;
+            var expectedMediaTypes = new[] { "text/xml" };
+            // Act
+            var response = await Client.GetAsync(
+                "http://localhost/ApiExplorerResponseTypeWithAttribute/CreateProductWithLimitedResponseContentTypes");
+
+            var body = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<List<ApiExplorerData>>(body);
+
+            // Assert
+            var description = Assert.Single(result);
+            Assert.Equal(2, description.SupportedResponseTypes.Count);
+            Assert.Equal(type1, description.SupportedResponseTypes[0].ResponseType);
+            Assert.Equal(201, description.SupportedResponseTypes[0].StatusCode);
+            Assert.Equal(
+                expectedMediaTypes,
+                description.SupportedResponseTypes[0].ResponseFormats.Select(responseFormat => responseFormat.MediaType).ToArray());
+            Assert.Equal(type2, description.SupportedResponseTypes[1].ResponseType);
+            Assert.Equal(400, description.SupportedResponseTypes[1].StatusCode);
+            Assert.Equal(
+                expectedMediaTypes,
+                description.SupportedResponseTypes[1].ResponseFormats.Select(responseFormat => responseFormat.MediaType).ToArray());
         }
 
         [Fact]
